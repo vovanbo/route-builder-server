@@ -1,0 +1,4 @@
+tornado
+sqlalchemy
+GeoAlchemy2
+marshmallow-jsonapi
