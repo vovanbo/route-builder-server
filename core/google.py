@@ -1,4 +1,3 @@
-import json
 import random
 import time
 from datetime import datetime
@@ -12,18 +11,17 @@ class AsyncClient(googlemaps.Client):
     def __init__(self, *args, **kwargs):
         super(AsyncClient, self).__init__(*args, **kwargs)
         self.http_client = httpclient.AsyncHTTPClient()
-        requests_kwargs = kwargs.get('requests_kwargs')
-        self.requests_kwargs = requests_kwargs or {}
+        self.requests_kwargs = kwargs.get('requests_kwargs') or {}
         self.requests_kwargs.update({
             "user_agent": googlemaps.client._USER_AGENT,
             "request_timeout": self.timeout,
             "validate_cert": True,  # NOTE(cbro): verify SSL certs.
         })
 
-    @gen.coroutine
-    def _get(self, url, params, first_request_time=None, retry_counter=0,
-             base_url=googlemaps.client._DEFAULT_BASE_URL,
-             accepts_clientid=True, extract_body=None, requests_kwargs=None):
+    async def _get(self, url, params, first_request_time=None, retry_counter=0,
+                   base_url=googlemaps.client._DEFAULT_BASE_URL,
+                   accepts_clientid=True, extract_body=None,
+                   requests_kwargs=None):
         """Performs _asynchronous_ HTTP GET request with credentials,
         returning the body as JSON.
         :param url: URL path for the request. Should begin with a slash.
@@ -57,16 +55,16 @@ class AsyncClient(googlemaps.Client):
         if not first_request_time:
             first_request_time = datetime.now()
 
-        elapsed = datetime.now() - first_request_time
-        if elapsed > self.retry_timeout:
-            raise googlemaps.exceptions.Timeout()
-
         authed_url = self._generate_auth_url(url, params, accepts_clientid)
         # Default to the client-level self.requests_kwargs, with method-level
         # requests_kwargs arg overriding.
         requests_kwargs = dict(self.requests_kwargs, **(requests_kwargs or {}))
 
         while True:
+            elapsed = datetime.now() - first_request_time
+            if elapsed > self.retry_timeout:
+                raise googlemaps.exceptions.Timeout()
+
             if retry_counter > 0:
                 # 0.5 * (1.5 ^ i) is an increased sleep time of 1.5x per iteration,
                 # starting at 0.5s when retry_counter=0. The first retry will occur
@@ -74,10 +72,10 @@ class AsyncClient(googlemaps.Client):
                 delay_seconds = 0.5 * 1.5 ** (retry_counter - 1)
 
                 # Jitter this value by 50% and pause.
-                yield gen.sleep(delay_seconds * (random.random() + 0.5))
+                await gen.sleep(delay_seconds * (random.random() + 0.5))
 
             try:
-                resp = yield self.http_client.fetch(base_url + authed_url,
+                resp = await self.http_client.fetch(base_url + authed_url,
                                                     **requests_kwargs)
             except httpclient.HTTPError as e:
                 if e.code == 599:
@@ -92,10 +90,11 @@ class AsyncClient(googlemaps.Client):
 
             # Check if the time of the nth previous query (where n is queries_per_second)
             # is under a second ago - if so, sleep for the difference.
-            if self.sent_times and len(self.sent_times) == self.queries_per_second:
+            if self.sent_times and len(
+                    self.sent_times) == self.queries_per_second:
                 elapsed_since_earliest = time.time() - self.sent_times[0]
                 if elapsed_since_earliest < 1:
-                    yield gen.sleep(1 - elapsed_since_earliest)
+                    await gen.sleep(1 - elapsed_since_earliest)
 
             try:
                 if extract_body:
@@ -127,13 +126,14 @@ class AsyncClient(googlemaps.Client):
         else:
             raise googlemaps.exceptions.ApiError(api_status)
 
-    @gen.coroutine
-    def directions(self, origin, destination,
-                   mode=None, waypoints=None, alternatives=False, avoid=None,
-                   language=None, units=None, region=None, departure_time=None,
-                   arrival_time=None, optimize_waypoints=False,
-                   transit_mode=None,
-                   transit_routing_preference=None, traffic_model=None):
+    async def directions(self, origin, destination,
+                         mode=None, waypoints=None, alternatives=False,
+                         avoid=None,
+                         language=None, units=None, region=None,
+                         departure_time=None,
+                         arrival_time=None, optimize_waypoints=False,
+                         transit_mode=None,
+                         transit_routing_preference=None, traffic_model=None):
         """Get directions between an origin point and a destination point.
 
         :param origin: The address or latitude/longitude value from which you wish
@@ -256,5 +256,5 @@ class AsyncClient(googlemaps.Client):
         if traffic_model:
             params["traffic_model"] = traffic_model
 
-        result = yield self._get("/maps/api/directions/json", params)
+        result = await self._get("/maps/api/directions/json", params)
         return result["routes"]

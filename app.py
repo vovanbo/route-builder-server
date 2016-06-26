@@ -23,7 +23,7 @@ define('cookie_secret', default='SOME_SECRET', group='application')
 class Application(BaseApplication):
     def __init__(self, handlers=None, default_host='', transforms=None,
                  **settings):
-        self.google_maps_client = AsyncClient(key=GOOGLE_MAPS_API_KEY)
+        self.googlemaps = AsyncClient(key=GOOGLE_MAPS_API_KEY)
         super(Application, self).__init__(
             handlers=handlers, default_host=default_host,
             transforms=transforms, **settings)

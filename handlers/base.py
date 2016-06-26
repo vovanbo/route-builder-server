@@ -7,6 +7,10 @@ class BaseHandler(RequestHandler):
     def db(self):
         return self.application.db
 
+    @property
+    def googlemaps(self):
+        return self.application.googlemaps
+
     def set_default_headers(self):
         self.set_header('Content-Type', 'application/json')
 
