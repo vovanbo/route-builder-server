@@ -1,13 +1,28 @@
 import random
 import time
 from datetime import datetime
+from enum import Enum
 
 import googlemaps
 from googlemaps import convert
 from tornado import gen, httpclient, escape
 
 
+class ApiErrorCode(Enum):
+    OK = 200
+    NOT_FOUND = 404
+    ZERO_RESULTS = 400
+    MAX_WAYPOINTS_EXCEEDED = 400
+    INVALID_REQUEST = 400
+    OVER_QUERY_LIMIT = 429
+    REQUEST_DENIED = 403
+    UNKNOWN_ERROR = 500
+
+
 class AsyncClient(googlemaps.Client):
+    """
+    Asynchronous implementation of googlemaps python client
+    """
     def __init__(self, *args, **kwargs):
         super(AsyncClient, self).__init__(*args, **kwargs)
         self.http_client = httpclient.AsyncHTTPClient()
