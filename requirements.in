@@ -3,4 +3,5 @@ sqlalchemy
 googlemaps
 GeoAlchemy2
 marshmallow-jsonapi
+psycopg2
 webargs
