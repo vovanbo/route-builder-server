@@ -1,0 +1,16 @@
+version: '2'
+services:
+  postgis:
+    container_name: route_builder_postgis
+    build: ./docker/postgis/
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgisdata:/var/lib/postgisql/data
+    environment:
+      POSTGRES_USER: route_builder
+      POSTGRES_DB: route_builder
+      POSTGRES_PASSWORD: somepassword
+
+volumes:
+  postgisdata: {}
