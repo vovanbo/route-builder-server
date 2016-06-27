@@ -1,20 +1,25 @@
 import logging
 import os
-from datetime import timedelta
 
-from tornado import gen
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, parse_config_file, define, \
     options
 from tornado.web import Application as BaseApplication, url
 
-from core.google import AsyncClient
-from handlers import directions
+from core import google
+from handlers import directions, routes
 from settings import BASE_DIR, UUID4_PATTERN, GOOGLE_MAPS_API_KEY
+import models
 
 define('host', default='127.0.0.1')
 define('port', default=8080)
 define('config_file', default='app.conf')
+define(
+    'db_url',
+    default='postgresql://route_builder:somepassword@localhost/route_builder'
+)
 
 define('debug', default=False, group='application')
 define('cookie_secret', default='SOME_SECRET', group='application')
@@ -23,7 +28,11 @@ define('cookie_secret', default='SOME_SECRET', group='application')
 class Application(BaseApplication):
     def __init__(self, handlers=None, default_host='', transforms=None,
                  **settings):
-        self.googlemaps = AsyncClient(key=GOOGLE_MAPS_API_KEY)
+        engine = create_engine(options.db_url, convert_unicode=True,
+                               echo=options.debug)
+        models.init_db(engine)
+        self.db = scoped_session(sessionmaker(bind=engine))
+        self.googlemaps = google.AsyncClient(key=GOOGLE_MAPS_API_KEY)
         super(Application, self).__init__(
             handlers=handlers, default_host=default_host,
             transforms=transforms, **settings)
@@ -37,6 +46,9 @@ def main():
     app = Application(
         [
             url(r'/directions/?', directions.DirectionsHandler),
+            url(r'/routes/?', routes.RoutesHandler),
+            url(r'/routes/({uuid})/?'.format(uuid=UUID4_PATTERN),
+                routes.RoutesHandler),
         ],
         static_path=os.path.join(BASE_DIR, 'static'),
         **options.group_dict('application')
