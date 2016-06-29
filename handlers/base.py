@@ -32,20 +32,16 @@ class BaseHandler(web.RequestHandler):
         result = {'errors': []}
         if 'exc_info' in kwargs:
             etype, value, traceback = kwargs['exc_info']
-            for messages_attribute in ['messages', 'args']:
-                messages = getattr(value, messages_attribute, None)
-                if messages:
-                    if isinstance(messages, dict):
+            args = getattr(value, 'args', None)
+            if args:
+                for arg in args:
+                    if isinstance(arg, dict) and 'errors' in arg:
+                        result = {**result, **arg}
+                    else:
                         result['errors'].append({
                             'status': status_code,
-                            'detail': messages
+                            'detail': arg
                         })
-                    else:
-                        for message in messages:
-                            result['errors'].append({
-                                'status': status_code,
-                                'detail': message
-                            })
         elif 'message' in kwargs:
             result['errors'].append({
                 'status': status_code,
