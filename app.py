@@ -51,7 +51,6 @@ def main():
             url(r'/routes/({uuid})/?'.format(uuid=UUID4_PATTERN),
                 routes.RoutesHandler),
         ],
-        static_path=os.path.join(BASE_DIR, 'static'),
         **options.group_dict('application')
     )
     app.listen(port=options.port, address=options.host)
