@@ -22,3 +22,5 @@ class Route(Base):
                        nullable=True)
     waypoints_names = Column(postgresql.ARRAY(String), nullable=True)
     polyline = Column(Geography(geometry_type='LINESTRING'))
+    bounds = Column(postgresql.JSON, nullable=True)
+    created = Column(DateTime(timezone=True))

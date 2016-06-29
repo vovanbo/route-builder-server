@@ -16,6 +16,8 @@ class RouteSchema(Schema):
     destination = fields.Dict()
     destination_name = fields.String()
     polyline = fields.Dict()
+    bounds = fields.Dict()
+    created = fields.DateTime()
 
     class Meta:
         type_ = 'routes'
