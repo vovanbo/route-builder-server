@@ -32,7 +32,7 @@ class DirectionsSchema(JSONAPISchema):
 
 
 class DirectionsHandler(BaseHandler):
-    async def get(self, *args, **kwargs):
+    async def get(self):
         args = parser.parse(DirectionsQuerySchema, self.request,
                             locations=('query',))
 
