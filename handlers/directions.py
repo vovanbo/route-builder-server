@@ -4,6 +4,7 @@ from marshmallow_jsonapi import Schema as JSONAPISchema, fields
 from webargs.tornadoparser import parser
 
 from core.google import ApiErrorCode
+from core.utils import dasherize
 from handlers.base import BaseHandler
 
 
@@ -27,6 +28,7 @@ class DirectionsSchema(JSONAPISchema):
     class Meta:
         type_ = 'directions'
         strict = True
+        inflect = dasherize
 
 
 class DirectionsHandler(BaseHandler):

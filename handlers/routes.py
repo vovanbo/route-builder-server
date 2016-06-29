@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from tornado import escape, web
 
-from core.utils import row_to_dict
+from core.utils import row_to_dict, dasherize
 from handlers.base import BaseHandler
 from models import Route
 
@@ -20,6 +20,7 @@ class RouteSchema(Schema):
     class Meta:
         type_ = 'routes'
         strict = True
+        inflect = dasherize
 
     @pre_dump(pass_many=True)
     def convert_geojson_to_dict(self, data, many):
