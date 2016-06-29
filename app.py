@@ -20,6 +20,7 @@ define(
     'db_url',
     default='postgresql://route_builder:somepassword@localhost/route_builder'
 )
+define('google_maps_api_key', default=GOOGLE_MAPS_API_KEY)
 
 define('debug', default=False, group='application')
 define('cookie_secret', default='SOME_SECRET', group='application')
@@ -32,7 +33,7 @@ class Application(BaseApplication):
                                echo=options.debug)
         models.init_db(engine)
         self.db = scoped_session(sessionmaker(bind=engine))
-        self.googlemaps = google.AsyncClient(key=GOOGLE_MAPS_API_KEY)
+        self.googlemaps = google.AsyncClient(key=options.google_maps_api_key)
         super(Application, self).__init__(
             handlers=handlers, default_host=default_host,
             transforms=transforms, **settings)
